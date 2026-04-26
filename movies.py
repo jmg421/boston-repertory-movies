@@ -16,7 +16,7 @@ Usage:
     python3 movies.py --json
 """
 
-import re, json, argparse, html
+import re, json, argparse, html, html
 from datetime import datetime
 from dataclasses import dataclass, asdict
 
@@ -109,17 +109,25 @@ def fetch_harvard() -> list[Film]:
 
 
 def fetch_alamo() -> list[Film]:
-    """Alamo Drafthouse Boston — JSON API."""
+    """Alamo Drafthouse Boston — JSON schedule API."""
     r = requests.get("https://drafthouse.com/s/mother/v2/schedule/market/boston", headers=HEADERS, timeout=15)
     films = []
     seen = set()
     try:
         data = r.json()
-        for p in data.get("presentations", []):
+        for p in data.get("data", data).get("presentations", data.get("presentations", [])):
             slug = p.get("slug", "")
-            # Title from slug: "the-devil-wears-prada-2" -> "The Devil Wears Prada 2"
-            title = slug.replace("-", " ").title()
+            show = p.get("show") or {}
+            title = show.get("title", "")
+            # Clean HTML tags from title
+            title = re.sub(r'<[^>]+>', '', title).strip()
+            if not title:
+                title = slug.replace("-", " ").title()
             if title and title not in seen and len(title) > 3:
+                # Filter out non-movie items
+                skip = ['all ages', 'qr ordering', 'rated pg', 'costume screening']
+                if title.lower() in skip:
+                    continue
                 seen.add(title)
                 films.append(Film(title=title, theater="Alamo Drafthouse", url=f"https://drafthouse.com/boston/show/{slug}"))
     except Exception:
