@@ -90,6 +90,43 @@ def fetch_somerville() -> list[Film]:
     return films
 
 
+def fetch_harvard() -> list[Film]:
+    """Harvard Film Archive — calendar page with event classes."""
+    r = requests.get("https://harvardfilmarchive.org/calendar", headers=HEADERS, timeout=15)
+    soup = BeautifulSoup(r.text, "html.parser")
+    films = []
+    seen = set()
+    for event in soup.select(".event"):
+        lines = [l.strip() for l in event.get_text("\n").split("\n") if l.strip() and l.strip() != "Read more"]
+        # Film title is after the time (e.g. "7:00 pm"), usually index 2
+        for line in lines:
+            if "Directed by" in line or "Screening" in line or "pm" in line or "am" in line or line.startswith("$") or line == "-" or "Sold Out" in line:
+                continue
+            if line not in seen and len(line) > 3:
+                seen.add(line)
+                films.append(Film(title=line, theater="Harvard Film Archive", url="https://harvardfilmarchive.org/calendar"))
+    return films
+
+
+def fetch_alamo() -> list[Film]:
+    """Alamo Drafthouse Boston — JSON API."""
+    r = requests.get("https://drafthouse.com/s/mother/v2/schedule/market/boston", headers=HEADERS, timeout=15)
+    films = []
+    seen = set()
+    try:
+        data = r.json()
+        for p in data.get("presentations", []):
+            slug = p.get("slug", "")
+            # Title from slug: "the-devil-wears-prada-2" -> "The Devil Wears Prada 2"
+            title = slug.replace("-", " ").title()
+            if title and title not in seen and len(title) > 3:
+                seen.add(title)
+                films.append(Film(title=title, theater="Alamo Drafthouse", url=f"https://drafthouse.com/boston/show/{slug}"))
+    except Exception:
+        pass
+    return films
+
+
 def main():
     parser = argparse.ArgumentParser(description="Boston repertory movie union list")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
@@ -99,6 +136,8 @@ def main():
         ("Brattle Theatre", fetch_brattle),
         ("Coolidge Corner", fetch_coolidge),
         ("Somerville Theatre", fetch_somerville),
+        ("Harvard Film Archive", fetch_harvard),
+        ("Alamo Drafthouse", fetch_alamo),
     ]
 
     all_films: list[Film] = []

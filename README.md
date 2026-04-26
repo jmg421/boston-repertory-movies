@@ -2,15 +2,17 @@
 
 Union list of current films at Boston-area repertory/arthouse theaters.
 
-Built for [@OmicsOmicsBlog](https://x.com/OmicsOmicsBlog) who [tried to vibe-code this with Gemini and got dead code](https://omicsomics.blogspot.com/2026/04/crossing-vibicon.html). Fixed by [@JonIsGold](https://x.com/JonIsGold) — a coder learning omics, returning the favor for a biologist learning to vibe code.
+Built for [@OmicsOmicsBlog](https://x.com/OmicsOmicsBlog) who [tried to vibe-code this with Gemini and got dead code](https://omicsomics.blogspot.com/2026/04/crossing-vibicon.html). Fixed by [@JonIsGold](https://x.com/JonIsGold).
 
 ## Theaters
 
-| Theater | Location | Site |
-|---------|----------|------|
-| Brattle Theatre | Cambridge | brattlefilm.org |
-| Coolidge Corner Theatre | Brookline | coolidge.org |
-| Somerville Theatre | Somerville | somervilletheatre.com |
+| Theater | Location | Source |
+|---------|----------|--------|
+| Brattle Theatre | Cambridge | HTML scrape |
+| Coolidge Corner Theatre | Brookline | HTML scrape |
+| Somerville Theatre | Somerville | RSS feed |
+| Harvard Film Archive | Cambridge | HTML scrape |
+| Alamo Drafthouse | Seaport | JSON API (coming soon) |
 
 ## Usage
 
@@ -19,10 +21,6 @@ pip install requests beautifulsoup4
 python3 movies.py          # pretty-printed union list
 python3 movies.py --json   # JSON output
 ```
-
-## How It Works
-
-No APIs — these theaters serve HTML. The script fetches each theater's showtimes page, parses the film listings with BeautifulSoup, deduplicates by title, and generates a union list highlighting films playing at multiple theaters.
 
 ## Want to add a theater?
 
